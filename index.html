@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharma Strategy Navigator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #047857; /* Emerald 600 */
+            --secondary: #fcd34d; /* Amber 300 */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .step-card {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        .decision-lock {
+            cursor: not-allowed;
+            opacity: 0.6;
+            filter: grayscale(100%);
+        }
+        .input-text, .input-select, .input-textarea {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            width: 100%;
+            transition: border-color 0.3s;
+        }
+        .input-text:focus, .input-select:focus, .input-textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.2);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Header (Updated with Logo and New Name) -->
+    <header class="mb-8 text-center">
+        <div class="flex items-center justify-center space-x-3 mb-2">
+            <!-- Logo (Wirun Wetsiri Image) -->
+            <img src='https://i.postimg.cc/yY1rPJ07/wirun-facbook.png' alt='Wirun Wetsiri Logo' class='w-10 h-10 rounded-full shadow-lg object-cover' onerror="this.onerror=null;this.src='https://placehold.co/40x40/047857/ffffff?text=W'">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-green-400">
+                    Pharma Strategy Navigator
+                </span>
+            </h1>
+        </div>
+        <p class="text-lg text-gray-600">4-Step Health Product Strategy Workshop</p>
+    </header>
+
+    <!-- Main Content Container -->
+    <div class="max-w-4xl mx-auto">
+        
+        <!-- Step Indicator & Navigation -->
+        <div id="step-navigation" class="flex justify-between items-center mb-6 p-4 bg-white rounded-xl shadow-lg">
+            <!-- Step Counter will be injected here -->
+        </div>
+
+        <!-- Dynamic Step Content -->
+        <div id="app-content">
+            <!-- Steps 0-4 will be rendered here -->
+        </div>
+
+        <!-- Action/Navigation Button -->
+        <div class="mt-8 flex justify-between items-center">
+            <button id="prev-step-btn" class="px-6 py-3 bg-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-400 transition duration-150 shadow-md hidden" onclick="prevStep()">
+                Back
+            </button>
+            <button id="next-step-btn" class="px-8 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition duration-150 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ml-auto" onclick="nextStep()" disabled>
+                Continue (Next)
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Modals (Simple Message Box for error/info) -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4">
+            <h3 id="modal-title" class="text-xl font-bold mb-3 text-gray-800"></h3>
+            <p id="modal-message" class="text-gray-600 mb-4"></p>
+            <button class="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+    
+    <!-- Footer (Added as requested) -->
+    <footer class="mt-12 text-center text-sm text-gray-500 p-4 border-t border-gray-200">
+        Design by <span class="font-semibold text-gray-700">Wirun Wetsiri</span> | <a href="http://www.pharmconnection.net" target="_blank" class="text-emerald-600 hover:text-emerald-800 transition">www.pharmconnection.net</a>
+    </footer>
+
+    <script>
+        // --- Global App State & Definitions ---
+        const STEP_DEFINITIONS = [
+            { id: 0, title: 'Step 0: Initial Setup', description: 'Company & Product Definition' },
+            { id: 1, title: 'Step 1: Discovery', description: 'Unmet Needs & Customer Flow' },
+            { id: 2, title: 'Step 2: Strategic Focus', description: 'STP & Core Value' },
+            { id: 3, title: 'Step 3: Commercial Execution', description: 'The 4Ps Mix' },
+            { id: 4, title: 'Step 4: Final Output', description: 'Strategy Summary & Reflection' },
+        ];
+
+        const PRODUCT_CATEGORIES = [
+            { value: 'pharmaceutical', label: '1. Pharmaceutical Drugs', goal: 'Treatment, relief, prevention (Rx, OTC)' },
+            { value: 'medical_device', label: '2. Medical Devices', goal: 'Diagnosis, monitoring, treatment support (e.g., ATK, BP monitor)' },
+            { value: 'dietary_supplement', label: '3. Dietary Supplements', goal: 'Health enhancement (vitamins, probiotics)' },
+            { value: 'herbal_product', label: '4. Herbal Products', goal: 'Traditional symptom relief' },
+            { value: 'cosmetics', label: '5. Cosmetics', goal: 'Cleanliness and aesthetics (cream, soap, toothpaste)' },
+            { value: 'special_food', label: '6. Special Purpose Foods', goal: 'Specialized nutrition (medical food, infant formula)' },
+            { value: 'household_hazard', label: '7. Household Hazardous', goal: 'Hygiene and vector control (disinfectant, mosquito spray)' },
+            { value: 'digital_health', label: '8. Digital Health (DTx)', goal: 'Monitoring, diagnosis, therapy via software/apps' },
+        ];
+
+        // UPDATED: Expanded Core Values
+        const CORE_VALUES = [
+            { value: 'clinical_efficacy', label: 'Clinical Efficacy & Superior Outcomes' },
+            { value: 'economic_value', label: 'Economic Value & Cost-Effectiveness' },
+            { value: 'user_experience', label: 'User Experience & Convenience' },
+            { value: 'access_equity', label: 'Access & Equity (Wider patient reach)' },
+            { value: 'diagnostic_precision', label: 'Diagnostic Precision & Speed (for Devices/DTx)' },
+            { value: 'safety_tolerability', label: 'Safety & Tolerability Profile' },
+        ];
+        
+        // UPDATED: Expanded Pricing/Access Strategies
+        const PRICING_STRATEGIES = [
+            { value: 'premium_high_value', label: 'Premium / High-Value' },
+            { value: 'value_based', label: 'Value-Based Pricing (VBP)' },
+            { value: 'cost_plus_markup', label: 'Cost-Plus / Mark-up (Traditional)' },
+            { value: 'tender_volume', label: 'Tender / Volume-Based Pricing' },
+            { value: 'tiered_pricing', label: 'Tiered Pricing (Segment-based)' },
+            { value: 'subscription_license', label: 'Subscription / License Fee (for DTx/Services)' },
+            { value: 'patient_access_scheme', label: 'Patient Access Scheme (PAS) / Copay Support' },
+            { value: 'generic_volume', label: 'Generic / Volume-Based' },
+        ];
+
+        // UPDATED: Expanded Distribution Channels
+        const CHANNEL_OPTIONS = [
+            { value: 'institutional_pharmacy', label: 'Institutional (Hospital/Clinic Pharmacy)' },
+            { value: 'payer_hmo_direct', label: 'Payer/HMO Direct Negotiation (Access Focus)' },
+            { value: 'retail_chain', label: 'Retail Pharmacy Chain (Boots, Watsons, etc.)' },
+            { value: 'e_commerce_dtc', label: 'E-commerce / DTC Platform (Direct-to-Consumer)' },
+            { value: 'digital_app_store', label: 'Digital Platform / App Store (for DTx)' },
+            { value: 'general_trade', label: 'General Trade / Supermarket / Convenience Stores' },
+            { value: 'direct_sales_force', label: 'Direct Sales Force / Key Account Manager' },
+        ];
+        
+        const JOURNEY_STAGES = [
+            { value: '', label: '-- Select a Core Stage --' },
+            // Discovery & Access Stages (Applicable to all categories)
+            { value: 'Awareness_Discovery', label: 'Awareness & Discovery (Identifying Need)' },
+            { value: 'Information_Search', label: 'Information Search (HCP, Digital, Retail)' },
+            { value: 'Payer_Access', label: 'Payer / Formulary Access (For Rx/Device/Special Food)' },
+            { value: 'Retail_Selection', label: 'Retail/E-commerce Selection (For OTC/Supplements/Cosmetics)' },
+            // Clinical/Device Focused Stages
+            { value: 'HCP_Consultation', label: 'HCP Consultation / Recommendation' },
+            { value: 'Diagnosis_Screening', label: 'Diagnosis / Screening / Self-Test' },
+            { value: 'Treatment_Initiation', label: 'Treatment Initiation / First Use' },
+            // Usage & Adherence Stages (Critical for Digital/Rx/Supplements)
+            { value: 'App_Download_Onboarding', label: 'App Download / Onboarding (For Digital Health)' },
+            { value: 'Daily_Use_Adherence', label: 'Daily Use & Adherence / Monitoring' },
+            // End of Cycle Stages
+            { value: 'Refill_Renewal_Subscription', label: 'Refill / Renewal / Subscription' },
+            { value: 'Post_Care_Feedback', label: 'Post-Care & Feedback / Outcome Evaluation' },
+        ];
+
+        // NEW: Segmentation Options for Decision 1, Step 2
+        const SEGMENTATION_OPTIONS = [
+            { 
+                type: 'HCP / Payer Segments', 
+                description: 'Key stakeholders involved in prescribing, approving, or paying for the product.',
+                options: [
+                    { value: 'hcp_specialist', label: 'Specialist Physicians (KOLs, High-volume prescribers)' },
+                    { value: 'hcp_generalist', label: 'General Practitioners / Pharmacists (Community-based)' },
+                    { value: 'payer_public', label: 'Public Payer (Govt. reimbursement bodies/Tender)' },
+                    { value: 'payer_private', label: 'Private Insurers / HMOs (Managed Care)' },
+                    { value: 'hcp_digital', label: 'Digital-savvy prescribers (Accept E-detailing / DTx)' },
+                    { value: 'hcp_cost_sensitive', label: 'Cost-sensitive Payers/HCPs (Focus on budget/value)' },
+                ]
+            },
+            { 
+                type: 'End-User / Consumer Segments', 
+                description: 'The final patient or consumer receiving the product/service.',
+                options: [
+                    { value: 'eu_elderly', label: 'Elderly Patients (Chronic, high adherence barrier)' },
+                    { value: 'eu_millennial', label: 'Millennials / Gen Z (Wellness, Digital Health focus)' },
+                    { value: 'eu_low_income', label: 'Low-income/Underinsured patients (Access-driven)' },
+                    { value: 'eu_proactive', label: 'Proactive/Preventative (Invests in supplements/wellness)' },
+                    { value: 'eu_skeptical', label: 'Skeptical/Traditional (Prefers Herbal/Established brands)' },
+                    { value: 'eu_experience', label: 'Experience-driven/Aesthetic (Cosmetics/Premium service focus)' },
+                ]
+            },
+        ];
+
+
+        let strategyState = {
+            currentStep: 0,
+            lockedSteps: 0, // Number of steps completed and locked
+            data: {
+                companyName: '',
+                productName: '',
+                category: '',
+                therapyArea: '',
+                // Step 1
+                mktResearchSources: [],
+                unmetNeedsNarrative: '',
+                journeyStages: ['', '', '', ''], // Now stores selected values from dropdown
+                motPoints: ['', ''],
+                interventionPoints: ['', ''],
+                // Step 2 (targetSegment is now an array of selected segment IDs)
+                targetSegment: [],
+                coreValueFocus: '',
+                valueStoryHeadline: '',
+                positioningStatement: '',
+                // Step 3
+                productElement: '',
+                pricingStrategy: '',
+                primaryDistribution: '',
+                accessHurdle: '',
+                hcpComm: '',
+                endUserComm: '',
+                // Step 4
+                finalReflection: ''
+            }
+        };
+        window.strategyState = strategyState; // Expose to global scope
+        
+        // --- Utility Functions ---
+
+        /** Shows a simple modal message */
+        function showModal(title, message) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-backdrop').classList.add('flex');
+        }
+
+        /** Hides the modal message */
+        function closeModal() {
+            document.getElementById('modal-backdrop').classList.add('hidden');
+            document.getElementById('modal-backdrop').classList.remove('flex');
+        }
+
+        /** Renders the step navigation progress bar (Aesthetic Update) */
+        function renderStepNavigation() {
+            const navContainer = document.getElementById('step-navigation');
+            let navHtml = '<div class="flex space-x-2 md:space-x-4 w-full">';
+
+            STEP_DEFINITIONS.forEach(step => {
+                if (step.id > 4) return;
+                const isCurrent = step.id === strategyState.currentStep;
+                const isCompleted = step.id < strategyState.lockedSteps;
+                
+                // Circle styling (Updated for clarity)
+                let bgColor = 'bg-gray-300';
+                let circleTextColor = 'text-gray-500';
+                let ring = '';
+
+                if (isCompleted) {
+                    bgColor = 'bg-emerald-600'; // Solid color for completed
+                    circleTextColor = 'text-white';
+                } else if (isCurrent) {
+                    bgColor = 'bg-white border-2 border-emerald-600'; // Outlined for current
+                    circleTextColor = 'text-emerald-700 font-bold';
+                    ring = 'ring-4 ring-emerald-300';
+                }
+
+                // Description text styling (Updated for clarity)
+                let descriptionTextColor = 'text-gray-500 font-medium';
+                if (isCompleted) {
+                    descriptionTextColor = 'text-gray-800 font-semibold'; // Darker text for completed
+                } else if (isCurrent) {
+                    descriptionTextColor = 'text-emerald-700 font-bold';
+                }
+
+                navHtml += `
+                    <div class="flex-1 text-center">
+                        <div class="w-8 h-8 md:w-10 md:h-10 mx-auto rounded-full ${bgColor} ${ring} flex items-center justify-center transition duration-300">
+                            <span class="text-sm font-semibold ${circleTextColor}">${step.id}</span>
+                        </div>
+                        <p class="mt-1 text-xs md:text-sm ${descriptionTextColor} hidden sm:block">${step.description}</p>
+                    </div>
+                `;
+            });
+
+            navHtml += '</div>';
+            navContainer.innerHTML = navHtml;
+        }
+
+
+        // --- Decision Rendering Functions (Steps 0-3) ---
+
+        /** Generates HTML for Step 0: Initial Setup */
+        function renderStep0() {
+            const data = strategyState.data;
+            const categoryOptions = PRODUCT_CATEGORIES.map(cat => `
+                <div class="flex items-center">
+                    <input id="cat-${cat.value}" type="radio" name="productCategory" value="${cat.value}" class="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500" ${data.category === cat.value ? 'checked' : ''} onchange="updateState('category', this.value)">
+                    <label for="cat-${cat.value}" class="ml-2 block text-sm font-medium text-gray-700">
+                        ${cat.label} <span class="text-gray-500 text-xs">(${cat.goal})</span>
+                    </label>
+                </div>
+            `).join('');
+
+            return `
+                <div class="step-card bg-white p-6 md:p-8 rounded-xl">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Step 0: Company & Product Definition</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label for="companyName" class="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                            <input type="text" id="companyName" class="input-text" value="${data.companyName}" oninput="updateState('companyName', this.value)" placeholder="e.g., Pharm Connection">
+                        </div>
+                        <div>
+                            <label for="productName" class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                            <input type="text" id="productName" class="input-text" value="${data.productName}" oninput="updateState('productName', this.value)" placeholder="e.g., AI Pharmacy Assistant">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Crucial Decision 1: Select Product Category</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-4 rounded-lg">
+                                ${categoryOptions}
+                            </div>
+                        </div>
+                        <div>
+                            <label for="therapyArea" class="block text-sm font-medium text-gray-700 mb-1">Crucial Decision 2: Select Therapy Area</label>
+                            <input type="text" id="therapyArea" class="input-text" value="${data.therapyArea}" oninput="updateState('therapyArea', this.value)" placeholder="e.g., Oncology, Wellness, Dermatology or Other">
+                        </div>
+                    </div>
+                </div>
+                <!-- Copy Button Added -->
+                <div class="mt-4 flex justify-end">
+                    <button class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition" onclick="copyStepData(0)">
+                        Copy Step 0 Data
+                    </button>
+                </div>
+            `;
+        }
+
+        /** Generates HTML for Step 1: Discovery */
+        function renderStep1() {
+            const data = strategyState.data;
+            const sources = [
+                { value: 'primary_quant', label: 'Primary (Quant) - e.g., Survey, Data Analytics' },
+                { value: 'primary_qual', label: 'Primary (Qual) - e.g., Interviews, Focus Groups' },
+                { value: 'secondary_quant', label: 'Secondary (Quant) - e.g., Sales data, Literature review' },
+                { value: 'secondary_qual', label: 'Secondary (Qual) - e.g., Social Listening, Case studies' },
+            ];
+
+            const sourceCheckboxes = sources.map(source => `
+                <div class="flex items-center">
+                    <input id="src-${source.value}" type="checkbox" value="${source.value}" class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500" ${data.mktResearchSources.includes(source.value) ? 'checked' : ''} onchange="handleCheckboxChange('mktResearchSources', this.value, this.checked)">
+                    <label for="src-${source.value}" class="ml-2 text-sm text-gray-700">${source.label}</label>
+                </div>
+            `).join('');
+            
+            // Journey Stage Inputs (4 stages) - Now dropdowns
+            const journeyInputs = data.journeyStages.map((stageValue, index) => `
+                <div class="flex items-center space-x-2">
+                    <span class="font-semibold text-lg text-emerald-600">${index + 1}.</span>
+                    <select id="journeyStage${index}" class="input-select flex-1" onchange="updateArrayState('journeyStages', ${index}, this.value)">
+                        ${JOURNEY_STAGES.map(stage => 
+                            `<option value="${stage.value}" ${stageValue === stage.value ? 'selected' : ''} ${stage.value === '' ? 'disabled' : ''}>${stage.label}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+            `).join('');
+            
+            // Live validation feedback for sources
+            const sourceCount = data.mktResearchSources.length;
+            let sourceFeedback = '';
+            if (sourceCount !== 2) {
+                const message = sourceCount < 2 ? `⚠️ Must select exactly 2 Primary Sources (Selected: ${sourceCount})` : '⚠️ Selection limit exceeded (Should be 2).';
+                sourceFeedback = `<p class="mt-2 text-sm text-red-600 font-semibold">${message}</p>`;
+            } else {
+                 sourceFeedback = `<p class="mt-2 text-sm text-emerald-600 font-semibold">✅ 2 Primary Sources Selected.</p>`;
+            }
+
+            // Live validation feedback for journey stages
+            const journeyComplete = data.journeyStages.every(s => s.trim().length > 0);
+            let journeyFeedback = '';
+            if (!journeyComplete) {
+                journeyFeedback = `<p class="mt-2 text-sm text-red-600 font-semibold">⚠️ Please select all 4 Customer Journey Stages.</p>`;
+            } else {
+                journeyFeedback = `<p class="mt-2 text-sm text-emerald-600 font-semibold">✅ 4 Customer Journey Stages Defined.</p>`;
+            }
+
+
+            return `
+                <div class="step-card bg-white p-6 md:p-8 rounded-xl">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Step 1: Discovery: Unmet Needs & Customer Flow</h2>
+                    <div class="space-y-6">
+                        <!-- Decision 1: Mkt Research & Unmet Needs -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Decision 1: Select 2 Primary Market Research Sources (Limited Budget & Time)</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-4 rounded-lg">
+                                ${sourceCheckboxes}
+                            </div>
+                            ${sourceFeedback}
+                            <label for="unmetNeeds" class="block text-sm font-medium text-gray-700 mt-4 mb-1">Define Unmet Needs Narrative (The key insight you expect to find)</label>
+                            <textarea id="unmetNeeds" class="input-textarea" rows="3" oninput="updateState('unmetNeedsNarrative', this.value)" placeholder="e.g., 'Most patients remain confused about how to use complex new medical devices, leading to poor adherence.'">${data.unmetNeedsNarrative}</textarea>
+                        </div>
+
+                        <!-- Decision 2: Journey Mapping -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Decision 2: Define 4 Core Customer Journey Stages (Select in order)</label>
+                            <div class="space-y-3 p-4 bg-yellow-50 rounded-lg">
+                                ${journeyInputs}
+                            </div>
+                            ${journeyFeedback}
+                        </div>
+
+                        <!-- Decision 3: MoT/Intervention -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Moment of Truth (MoT) - 2 Points</label>
+                                <input type="text" class="input-text mb-2" value="${data.motPoints[0]}" oninput="updateArrayState('motPoints', 0, this.value)" placeholder="MoT 1 (Critical Decision Point)">
+                                <input type="text" class="input-text" value="${data.motPoints[1]}" oninput="updateArrayState('motPoints', 1, this.value)" placeholder="MoT 2 (Key Experience Point)">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Intervention Points - 2 Points</label>
+                                <input type="text" class="input-text mb-2" value="${data.interventionPoints[0]}" oninput="updateArrayState('interventionPoints', 0, this.value)" placeholder="Intervention 1 (Where Product/Service is introduced)">
+                                <input type="text" class="input-text" value="${data.interventionPoints[1]}" oninput="updateArrayState('interventionPoints', 1, this.value)" placeholder="Intervention 2 (e.g., Post-sales support)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Copy Button Added -->
+                <div class="mt-4 flex justify-end">
+                    <button class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition" onclick="copyStepData(1)">
+                        Copy Step 1 Data
+                    </button>
+                </div>
+            `;
+        }
+        
+        /** Generates HTML for Step 2: Strategic Focus (Updated for Checkboxes) */
+        function renderStep2() {
+            const data = strategyState.data;
+            
+            // Target Segment Checkboxes
+            const segmentGroups = SEGMENTATION_OPTIONS.map(group => {
+                const options = group.options.map(opt => `
+                    <div class="flex items-center">
+                        <input id="seg-${opt.value}" type="checkbox" value="${opt.value}" class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500" ${data.targetSegment.includes(opt.value) ? 'checked' : ''} onchange="handleCheckboxChange('targetSegment', this.value, this.checked)">
+                        <label for="seg-${opt.value}" class="ml-2 text-sm text-gray-700">${opt.label}</label>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="mb-4">
+                        <h4 class="text-md font-bold text-gray-700 border-b pb-1 mb-2">${group.type}</h4>
+                        <p class="text-xs text-gray-500 mb-3">${group.description}</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            ${options}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Live validation feedback for segments
+            const segmentCount = data.targetSegment.length;
+            const hasHCP = data.targetSegment.some(v => v.startsWith('hcp') || v.startsWith('payer'));
+            const hasEU = data.targetSegment.some(v => v.startsWith('eu'));
+            
+            let segmentFeedback = '';
+            if (segmentCount < 3) {
+                segmentFeedback = `<p class="mt-2 text-sm text-red-600 font-semibold">⚠️ Select at least 3 segments in total (Selected: ${segmentCount})</p>`;
+            } else if (!hasHCP || !hasEU) {
+                segmentFeedback = `<p class="mt-2 text-sm text-red-600 font-semibold">⚠️ Must include at least one HCP/Payer segment AND one End-User segment.</p>`;
+            } else {
+                 segmentFeedback = `<p class="mt-2 text-sm text-emerald-600 font-semibold">✅ Segments Defined (Selected: ${segmentCount})</p>`;
+            }
+
+            // Core Value Radio Buttons
+            const coreValueOptions = CORE_VALUES.map(v => `
+                <div class="flex items-center">
+                    <input id="val-${v.value}" type="radio" name="coreValueFocus" value="${v.value}" class="w-4 h-4 text-emerald-600 border-gray-300 focus:ring-emerald-500" ${data.coreValueFocus === v.value ? 'checked' : ''} onchange="updateState('coreValueFocus', this.value)">
+                    <label for="val-${v.value}" class="ml-2 block text-sm font-medium text-gray-700">
+                        ${v.label}
+                    </label>
+                </div>
+            `).join('');
+
+
+            return `
+                <div class="step-card bg-white p-6 md:p-8 rounded-xl">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Step 2: Strategic Focus: STP & Core Value</h2>
+                    <div class="space-y-6">
+                        <!-- Decision 1: Segmentation -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Decision 1: Target Segment / Persona (Select key elements)</label>
+                            <div class="bg-gray-50 p-4 rounded-lg space-y-4">
+                                ${segmentGroups}
+                            </div>
+                            ${segmentFeedback}
+                        </div>
+                        
+                        <!-- Decision 2: Value Proposition (Expanded Options) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Decision 2: Select Core Value Focus</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-4 rounded-lg">
+                                ${coreValueOptions}
+                            </div>
+                            <label for="valueStoryHeadline" class="block text-sm font-medium text-gray-700 mt-4 mb-1">Define Value Story Headline (1 Line)</label>
+                            <input type="text" id="valueStoryHeadline" class="input-text" value="${data.valueStoryHeadline}" oninput="updateState('valueStoryHeadline', this.value)" placeholder="e.g., 'Transforming complex monitoring into simple, daily care.'">
+                        </div>
+
+                        <!-- Decision 3: Positioning -->
+                        <div>
+                            <label for="positioningStatement" class="block text-sm font-medium text-gray-700 mb-1">Decision 3: Positioning Statement (Who / What / Why)</label>
+                            <textarea id="positioningStatement" class="input-textarea" rows="3" oninput="updateState('positioningStatement', this.value)" placeholder="e.g., 'For physicians demanding precision, our AI Diagnosis Tool is the fastest and most accurate diagnostic instrument, because we utilize the latest Machine Learning technology.'">${data.positioningStatement}</textarea>
+                        </div>
+                    </div>
+                </div>
+                <!-- Copy Button Added -->
+                <div class="mt-4 flex justify-end">
+                    <button class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition" onclick="copyStepData(2)">
+                        Copy Step 2 Data
+                    </button>
+                </div>
+            `;
+        }
+
+        /** Generates HTML for Step 3: Commercial Execution */
+        function renderStep3() {
+            const data = strategyState.data;
+            
+            const categoryLabel = strategyState.data.category ? PRODUCT_CATEGORIES.find(c => c.value === strategyState.data.category)?.label : 'Please select Category in Step 0';
+            
+            const pricingOptions = PRICING_STRATEGIES.map(p => `
+                <option value="${p.value}" ${data.pricingStrategy === p.value ? 'selected' : ''}>${p.label}</option>
+            `).join('');
+
+            const channelOptions = CHANNEL_OPTIONS.map(c => `
+                <option value="${c.value}" ${data.primaryDistribution === c.value ? 'selected' : ''}>${c.label}</option>
+            `).join('');
+
+
+            return `
+                <div class="step-card bg-white p-6 md:p-8 rounded-xl">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Step 3: Commercial Execution: The 4Ps Mix</h2>
+                    <div class="text-sm p-3 mb-4 rounded-lg bg-emerald-50 text-emerald-800 font-medium">
+                        Selected Product Category: **${categoryLabel}** (Subsequent decisions must align with this type)
+                    </div>
+                    <div class="space-y-6">
+                        <!-- Decision 1: Product & Price -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="productElement" class="block text-sm font-medium text-gray-700 mb-1">Most Important Product Element</label>
+                                <input type="text" id="productElement" class="input-text" value="${data.productElement}" oninput="updateState('productElement', this.value)" placeholder="e.g., Core efficacy, Digital interface, Support service, Formulation">
+                            </div>
+                            <div>
+                                <label for="pricingStrategy" class="block text-sm font-medium text-gray-700 mb-1">Pricing/Access Strategy</label>
+                                <select id="pricingStrategy" class="input-select" onchange="updateState('pricingStrategy', this.value)">
+                                    <option value="" disabled selected>-- Select Pricing Strategy --</option>
+                                    ${PRICING_STRATEGIES.map(p => `<option value="${p.value}" ${data.pricingStrategy === p.value ? 'selected' : ''}>${p.label}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Decision 2: Place -->
+                        <div>
+                            <label for="primaryDistribution" class="block text-sm font-medium text-gray-700 mb-1">Primary Distribution Channel</label>
+                            <select id="primaryDistribution" class="input-select mb-3" onchange="updateState('primaryDistribution', this.value)">
+                                <option value="" disabled selected>-- Select Main Channel --</option>
+                                ${CHANNEL_OPTIONS.map(c => `<option value="${c.value}" ${data.primaryDistribution === c.value ? 'selected' : ''}>${c.label}</option>`).join('')}
+                            </select>
+                            <label for="accessHurdle" class="block text-sm font-medium text-gray-700 mb-1">Biggest Access Hurdle in this Channel</label>
+                            <input type="text" id="accessHurdle" class="input-text" value="${data.accessHurdle}" oninput="updateState('accessHurdle', this.value)" placeholder="e.g., Regulatory, P&T Committee, Supply Chain Complexity">
+                            
+                        </div>
+
+                        <!-- Decision 3: Promotion & Communication -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="hcpComm" class="block text-sm font-medium text-gray-700 mb-1">Primary Communication Pathway for HCPs</label>
+                                <input type="text" id="hcpComm" class="input-text" value="${data.hcpComm}" oninput="updateState('hcpComm', this.value)" placeholder="e.g., MSL engagement, KOL advocacy, Digital P2P">
+                            </div>
+                            <div>
+                                <label for="endUserComm" class="block text-sm font-medium text-gray-700 mb-1">Primary Communication Pathway for End-Users</label>
+                                <input type="text" id="endUserComm" class="input-text" value="${data.endUserComm}" oninput="updateState('endUserComm', this.value)" placeholder="e.g., Social Media Campaign, Pharmacy Program, App Notification">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Copy Button Added -->
+                <div class="mt-4 flex justify-end">
+                    <button class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition" onclick="copyStepData(3)">
+                        Copy Step 3 Data
+                    </button>
+                </div>
+            `;
+        }
+
+        /** Generates HTML for Step 4: Strategy Summary & Reflection */
+        function renderStep4() {
+            const data = strategyState.data;
+            const narrative = generateStrategicNarrative();
+            
+            return `
+                <div class="step-card bg-white p-6 md:p-8 rounded-xl">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Step 4: Strategy Summary & Reflection</h2>
+                    
+                    <!-- Strategic Narrative Output -->
+                    <div class="mb-8 p-4 border-2 border-emerald-300 bg-emerald-50 rounded-lg">
+                        <h3 class="text-xl font-bold text-emerald-800 mb-3">Strategic Narrative Text (Final Strategy Summary)</h3>
+                        <pre id="strategic-narrative" class="whitespace-pre-wrap text-sm md:text-base text-gray-800 p-3 bg-white border border-gray-200 rounded-lg">${narrative}</pre>
+                        <button class="mt-4 px-4 py-2 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition" onclick="copyToClipboard('strategic-narrative')">
+                            Copy Text
+                        </button>
+                    </div>
+
+                    <!-- Reflection -->
+                    <div>
+                        <label for="finalReflection" class="block text-sm font-medium text-gray-700 mb-1">Reflection: Final Debate Argument (2-3 lines: Why is this strategy superior to competitors?)</label>
+                        <textarea id="finalReflection" class="input-textarea" rows="4" oninput="updateState('finalReflection', this.value)" placeholder="Enter supporting arguments">${data.finalReflection}</textarea>
+                    </div>
+                </div>
+                
+                <!-- Leaderboard/Summary Display (Simplified for single-user session) -->
+                <div class="mt-6 p-4 bg-gray-100 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Final Summary (For Leaderboard)</h3>
+                    <p class="text-sm"><strong>Company:</strong> ${data.companyName || '-'}, <strong>Product:</strong> ${data.productName || '-'}</p>
+                    <p class="mt-2 text-sm"><strong>Conclusion/Strength:</strong> ${data.finalReflection || 'Waiting for Final Reflection'}</p>
+                    <button class="mt-4 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition" onclick="resetWorkshop()">
+                        Start New Workshop
+                    </button>
+                </div>
+            `;
+        }
+
+        /** Generates the Strategic Narrative Text based on current state */
+        function generateStrategicNarrative() {
+            const d = strategyState.data;
+            const cat = PRODUCT_CATEGORIES.find(c => c.value === d.category)?.label || 'Not specified';
+            const coreValue = d.coreValueFocus ? CORE_VALUES.find(v => v.value === d.coreValueFocus)?.label : '-';
+            const pricing = d.pricingStrategy ? PRICING_STRATEGIES.find(p => p.value === d.pricingStrategy)?.label : '-';
+            const distribution = d.primaryDistribution ? CHANNEL_OPTIONS.find(c => c.value === d.primaryDistribution)?.label : '-';
+
+            const journeyText = d.journeyStages.filter(s => s.trim() !== '').map(val => {
+                const stage = JOURNEY_STAGES.find(j => j.value === val);
+                if (stage) {
+                    return stage.label.split('(')[0].trim();
+                }
+                return val;
+            }).join(' → ') || '-';
+            
+            const mktSourcesText = d.mktResearchSources.map(s => s.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')).join(', ') || '-';
+            
+            // Format selected segments for narrative
+            const selectedSegments = d.targetSegment.map(v => {
+                for (const group of SEGMENTATION_OPTIONS) {
+                    const option = group.options.find(o => o.value === v);
+                    if (option) return option.label;
+                }
+                return v;
+            }).join('; ');
+
+            return `
+[Strategic Narrative: ${d.productName || 'New Product'}]
+
+1. Context & Discovery:
+   - Company/Product: ${d.companyName || '-'} / ${d.productName || '-'}
+   - Product Category: ${cat} (${d.therapyArea || 'Undefined Area'})
+   - Key Unmet Needs: ${d.unmetNeedsNarrative || 'N/A'}
+   - Mkt Research Sources: ${mktSourcesText}
+
+2. Customer Flow & Intervention:
+   - Defined Customer Journey: ${journeyText}
+   - Moments of Truth (MoT): 1. ${d.motPoints[0] || '-'}, 2. ${d.motPoints[1] || '-'}
+   - Intervention Points: 1. ${d.interventionPoints[0] || '-'}, 2. ${d.interventionPoints[1] || '-'}
+
+3. Strategic Focus (STP & Value):
+   - Target Segments: ${selectedSegments || 'N/A'}
+   - Core Value Focus: ${coreValue}
+   - Value Story Headline: "${d.valueStoryHeadline || 'No Headline'}"
+   - Positioning Statement: ${d.positioningStatement || 'N/A'}
+
+4. Commercial Execution (4Ps):
+   - Product Key Element: ${d.productElement || '-'}
+   - Pricing Strategy: ${pricing}
+   - Primary Place: ${distribution}
+   - Biggest Access Hurdle: ${d.accessHurdle || '-'}
+   - HCP Communication: ${d.hcpComm || '-'}
+   - End-User Communication: ${d.endUserComm || '-'}
+            `.trim();
+        }
+
+        /** Generates a text summary for a specific step's decisions. */
+        function generateStepSummary(step) {
+            const d = strategyState.data;
+            const stepTitle = STEP_DEFINITIONS.find(s => s.id === step)?.title || `Step ${step}`;
+            let summary = `--- ${stepTitle} Decisions ---\n`;
+            
+            // Helper function to format segments/categories
+            const getLabel = (value, definitions) => definitions.find(item => item.value === value)?.label || value;
+            
+            switch (step) {
+                case 0:
+                    const cat = getLabel(d.category, PRODUCT_CATEGORIES);
+                    summary += `Company Name: ${d.companyName}\n`;
+                    summary += `Product Name: ${d.productName}\n`;
+                    summary += `Product Category: ${cat}\n`;
+                    summary += `Therapy Area: ${d.therapyArea}\n`;
+                    break;
+                case 1:
+                    const mktSources = d.mktResearchSources.map(s => getLabel(s, [])).join(', ');
+                    const journeyText = d.journeyStages.filter(s => s.trim() !== '').map(val => {
+                        const stage = JOURNEY_STAGES.find(j => j.value === val);
+                        return stage ? stage.label : val;
+                    }).join(' → ');
+                    
+                    summary += `Market Research Sources (2): ${mktSources}\n`;
+                    summary += `Unmet Needs Narrative: ${d.unmetNeedsNarrative}\n`;
+                    summary += `Customer Journey: ${journeyText}\n`;
+                    summary += `MoT Points: ${d.motPoints.join(' / ')}\n`;
+                    summary += `Intervention Points: ${d.interventionPoints.join(' / ')}\n`;
+                    break;
+                case 2:
+                    const coreValue = getLabel(d.coreValueFocus, CORE_VALUES);
+                    
+                    const selectedSegments = d.targetSegment.map(v => {
+                        for (const group of SEGMENTATION_OPTIONS) {
+                            const option = group.options.find(o => o.value === v);
+                            if (option) return option.label;
+                        }
+                        return v;
+                    }).join('; ');
+                    
+                    summary += `Target Segments: ${selectedSegments}\n`;
+                    summary += `Core Value Focus: ${coreValue}\n`;
+                    summary += `Value Story Headline: ${d.valueStoryHeadline}\n`;
+                    summary += `Positioning Statement: ${d.positioningStatement}\n`;
+                    break;
+                case 3:
+                    const pricing = getLabel(d.pricingStrategy, PRICING_STRATEGIES);
+                    const distribution = getLabel(d.primaryDistribution, CHANNEL_OPTIONS);
+                    
+                    summary += `Product Key Element: ${d.productElement}\n`;
+                    summary += `Pricing/Access Strategy: ${pricing}\n`;
+                    summary += `Primary Distribution Channel: ${distribution}\n`;
+                    summary += `Biggest Access Hurdle: ${d.accessHurdle}\n`;
+                    summary += `HCP Communication: ${d.hcpComm}\n`;
+                    summary += `End-User Communication: ${d.endUserComm}\n`;
+                    break;
+                default:
+                    return `Error: Invalid step ID (${step}) for summary generation.`;
+            }
+            return summary.trim();
+        }
+
+        /** Copies the current step's decision data to the clipboard. */
+        function copyStepData(step) {
+            const summary = generateStepSummary(step);
+            
+            // Create a temporary element to hold the text
+            const el = document.createElement('textarea');
+            el.value = summary;
+            el.setAttribute('readonly', '');
+            el.style.position = 'absolute';
+            el.style.left = '-9999px';
+            document.body.appendChild(el);
+            el.select();
+            
+            try {
+                document.execCommand('copy');
+                showModal('Step Data Copied', `Decisions for Step ${step} have been copied to your clipboard.`);
+            } catch (err) {
+                showModal('Copy Failed', 'Could not copy text.');
+                console.error('Copy failed:', err);
+            } finally {
+                document.body.removeChild(el);
+            }
+        }
+        
+        /** Updates a simple state key/value */
+        function updateState(key, value) {
+            strategyState.data[key] = value;
+            // Re-render the current step immediately after state update
+            renderStep(strategyState.currentStep);
+        }
+
+        /** Updates an array state at a specific index */
+        function updateArrayState(key, index, value) {
+            strategyState.data[key][index] = value;
+            // Re-render the current step immediately after state update
+            renderStep(strategyState.currentStep);
+        }
+        
+        /** Handles checkbox changes for array state */
+        function handleCheckboxChange(key, value, isChecked) {
+            let array = strategyState.data[key];
+            
+            // Special handling for mktResearchSources (limit 2)
+            if (key === 'mktResearchSources' && isChecked) {
+                if (array.length >= 2 && !array.includes(value)) {
+                    document.getElementById(`src-${value}`).checked = false;
+                    showModal('Selection Limit Reached', 'Due to time and budget constraints, please select exactly 2 primary sources.');
+                    renderStep(strategyState.currentStep); 
+                    return;
+                }
+            }
+
+            if (isChecked) {
+                if (!array.includes(value)) array.push(value);
+            } else {
+                strategyState.data[key] = array.filter(v => v !== value);
+            }
+            // Re-render the current step immediately after state update
+            renderStep(strategyState.currentStep);
+        }
+
+        /** Validates required fields for each step */
+        function checkValidity(step) {
+            let isValid = false;
+            const data = strategyState.data;
+
+            // Define minimum length for free-text inputs for simple validation
+            const MIN_TEXT_LENGTH = 3;
+            
+            // Helper for Step 2 segmentation validation
+            const selectedSegments = data.targetSegment;
+            const isHCP = selectedSegments.some(v => v.startsWith('hcp') || v.startsWith('payer'));
+            const isEU = selectedSegments.some(v => v.startsWith('eu'));
+
+            switch (step) {
+                case 0:
+                    isValid = data.companyName.trim().length > 0 &&
+                              data.productName.trim().length > 0 &&
+                              data.category.length > 0 &&
+                              data.therapyArea.trim().length > 0;
+                    break;
+                case 1:
+                    isValid = data.mktResearchSources.length === 2 && // Must select exactly 2
+                              data.unmetNeedsNarrative.trim().length > MIN_TEXT_LENGTH && 
+                              data.journeyStages.every(s => s.trim().length > 0) && // Must select all 4 stages, ensuring no empty string
+                              data.motPoints.every(p => p.trim().length > 0) &&
+                              data.interventionPoints.every(p => p.trim().length > 0);
+                    break;
+                case 2:
+                    isValid = selectedSegments.length >= 3 && // Must select at least 3 segments
+                              isHCP && isEU && // Must include at least 1 HCP/Payer AND 1 End-User
+                              data.coreValueFocus.length > 0 &&
+                              data.valueStoryHeadline.trim().length > MIN_TEXT_LENGTH && 
+                              data.positioningStatement.trim().length > MIN_TEXT_LENGTH; 
+                    break;
+                case 3:
+                    isValid = data.productElement.trim().length > 0 &&
+                              data.pricingStrategy.length > 0 && // Dropdown selected
+                              data.primaryDistribution.length > 0 && // Dropdown selected
+                              data.accessHurdle.trim().length > 0 &&
+                              data.hcpComm.trim().length > 0 &&
+                              data.endUserComm.trim().length > 0;
+                    break;
+                case 4:
+                    isValid = data.finalReflection.trim().length > MIN_TEXT_LENGTH; 
+                    break;
+                default:
+                    isValid = false;
+            }
+            
+            const nextButton = document.getElementById('next-step-btn');
+            if (nextButton) {
+                nextButton.disabled = !isValid;
+            }
+        }
+
+        /** Main function to render the current step content */
+        function renderStep(step) {
+            if (step < 0 || step > STEP_DEFINITIONS.length - 1) return;
+
+            strategyState.currentStep = step;
+            const contentContainer = document.getElementById('app-content');
+            let contentHTML = '';
+
+            switch (step) {
+                case 0: contentHTML = renderStep0(); break;
+                case 1: contentHTML = renderStep1(); break;
+                case 2: contentHTML = renderStep2(); break;
+                case 3: contentHTML = renderStep3(); break;
+                case 4: contentHTML = renderStep4(); break;
+                default: contentHTML = `<div class="p-8 text-center text-gray-500">Error: Step not found.</div>`;
+            }
+
+            contentContainer.innerHTML = contentHTML;
+            renderStepNavigation();
+            // checkValidity must run AFTER the content is rendered to enable/disable the button
+            checkValidity(step); 
+            updateNavigationButtons();
+
+            // Apply decision lock for completed steps
+            const appContent = document.getElementById('app-content');
+            if (step < strategyState.lockedSteps) {
+                appContent.classList.add('decision-lock');
+                Array.from(appContent.querySelectorAll('input, select, textarea, button')).forEach(el => el.disabled = true);
+            } else {
+                appContent.classList.remove('decision-lock');
+                // Ensure copy button is not disabled when viewing locked steps 
+                // (it is enabled by default in renderStepX but this ensures the main next button is handled correctly)
+            }
+            
+            // Re-enable copy buttons for locked (completed) steps, as the main content lock disables all.
+            if (step < strategyState.lockedSteps) {
+                 const copyButton = document.querySelector(`#app-content button[onclick="copyStepData(${step})"]`);
+                 if (copyButton) copyButton.disabled = false;
+            }
+        }
+
+        /** Handles navigation to the next step (locks the current step) */
+        function nextStep() {
+            if (strategyState.currentStep < strategyState.lockedSteps) {
+                // If the user is viewing a locked step, just advance without locking
+                strategyState.currentStep++;
+            } else if (strategyState.currentStep < STEP_DEFINITIONS.length - 1) {
+                // If it's a new step, lock the current one and advance
+                strategyState.lockedSteps = strategyState.currentStep + 1;
+                strategyState.currentStep++;
+                showModal('Step Completed', `Decisions in Step ${strategyState.lockedSteps - 1} have been recorded and locked. You cannot return to edit them.`);
+            }
+            renderStep(strategyState.currentStep);
+        }
+
+        /** Handles navigation to the previous step (only for viewing, not editing) */
+        function prevStep() {
+            if (strategyState.currentStep > 0) {
+                strategyState.currentStep--;
+            }
+            renderStep(strategyState.currentStep);
+        }
+
+        /** Updates the visibility and text of navigation buttons */
+        function updateNavigationButtons() {
+            const nextBtn = document.getElementById('next-step-btn');
+            const prevBtn = document.getElementById('prev-step-btn');
+
+            // Previous button is hidden on Step 0
+            if (strategyState.currentStep === 0) {
+                prevBtn.classList.add('hidden');
+            } else {
+                prevBtn.classList.remove('hidden');
+            }
+
+            // Next button text and visibility on final step
+            if (strategyState.currentStep === STEP_DEFINITIONS.length - 1) {
+                nextBtn.textContent = 'Confirm Summary (Finalize)';
+            } else {
+                nextBtn.textContent = 'Continue (Next)';
+            }
+
+            // If user is viewing a locked step, next button is purely for navigation
+            if (strategyState.currentStep < strategyState.lockedSteps) {
+                nextBtn.disabled = false;
+            }
+        }
+
+        /** Resets the entire workshop state */
+        function resetWorkshop() {
+            strategyState = {
+                currentStep: 0,
+                lockedSteps: 0,
+                data: {
+                    companyName: '',
+                    productName: '',
+                    category: '',
+                    therapyArea: '',
+                    mktResearchSources: [],
+                    unmetNeedsNarrative: '',
+                    journeyStages: ['', '', '', ''],
+                    motPoints: ['', ''],
+                    interventionPoints: ['', ''],
+                    targetSegment: [], // Changed back to array
+                    coreValueFocus: '',
+                    valueStoryHeadline: '',
+                    positioningStatement: '',
+                    productElement: '',
+                    pricingStrategy: '',
+                    primaryDistribution: '',
+                    accessHurdle: '',
+                    hcpComm: '',
+                    endUserComm: '',
+                    finalReflection: ''
+                }
+            };
+            window.strategyState = strategyState;
+            renderStep(0);
+        }
+
+        /** Copies text content to clipboard */
+        function copyToClipboard(elementId) {
+            const textToCopy = document.getElementById(elementId).textContent || document.getElementById(elementId).value;
+            try {
+                // Use execCommand for better compatibility in environments like iframes
+                const el = document.createElement('textarea');
+                el.value = textToCopy;
+                el.setAttribute('readonly', '');
+                el.style.position = 'absolute';
+                el.style.left = '-9999px';
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                showModal('Copied Successfully', 'The Strategic Narrative Text has been copied to your clipboard.');
+            } catch (err) {
+                showModal('Copy Failed', 'Could not copy text: ' + err.message);
+            }
+        }
+
+        // --- Initialization ---
+        // Start the app immediately upon loading the window (removed Firebase dependency)
+        window.onload = function() {
+            renderStep(strategyState.currentStep);
+        };
+
+    </script>
+</body>
+</html>
