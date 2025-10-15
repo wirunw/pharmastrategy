@@ -230,6 +230,18 @@
         
         // --- Utility Functions ---
 
+        /** Global variable to hold the ID of the last focused input field */
+        let lastFocusedInputId = null;
+        
+        /** Debounce function to limit how often a function is called */
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
         /** Shows a simple modal message */
         function showModal(title, message) {
             document.getElementById('modal-title').textContent = title;
@@ -311,11 +323,11 @@
                     <div class="space-y-6">
                         <div>
                             <label for="companyName" class="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
-                            <input type="text" id="companyName" class="input-text" value="${data.companyName}" oninput="updateState('companyName', this.value)" placeholder="e.g., Pharm Connection">
+                            <input type="text" id="companyName" class="input-text" value="${data.companyName}" onfocus="lastFocusedInputId='companyName'" oninput="debouncedUpdateState('companyName', this.value)" placeholder="e.g., Pharm Connection">
                         </div>
                         <div>
                             <label for="productName" class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
-                            <input type="text" id="productName" class="input-text" value="${data.productName}" oninput="updateState('productName', this.value)" placeholder="e.g., AI Pharmacy Assistant">
+                            <input type="text" id="productName" class="input-text" value="${data.productName}" onfocus="lastFocusedInputId='productName'" oninput="debouncedUpdateState('productName', this.value)" placeholder="e.g., AI Pharmacy Assistant">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Crucial Decision 1: Select Product Category</label>
@@ -325,7 +337,7 @@
                         </div>
                         <div>
                             <label for="therapyArea" class="block text-sm font-medium text-gray-700 mb-1">Crucial Decision 2: Select Therapy Area</label>
-                            <input type="text" id="therapyArea" class="input-text" value="${data.therapyArea}" oninput="updateState('therapyArea', this.value)" placeholder="e.g., Oncology, Wellness, Dermatology or Other">
+                            <input type="text" id="therapyArea" class="input-text" value="${data.therapyArea}" onfocus="lastFocusedInputId='therapyArea'" oninput="debouncedUpdateState('therapyArea', this.value)" placeholder="e.g., Oncology, Wellness, Dermatology or Other">
                         </div>
                     </div>
                 </div>
@@ -399,7 +411,7 @@
                             </div>
                             ${sourceFeedback}
                             <label for="unmetNeeds" class="block text-sm font-medium text-gray-700 mt-4 mb-1">Define Unmet Needs Narrative (The key insight you expect to find)</label>
-                            <textarea id="unmetNeeds" class="input-textarea" rows="3" oninput="updateState('unmetNeedsNarrative', this.value)" placeholder="e.g., 'Most patients remain confused about how to use complex new medical devices, leading to poor adherence.'">${data.unmetNeedsNarrative}</textarea>
+                            <textarea id="unmetNeeds" class="input-textarea" rows="3" onfocus="lastFocusedInputId='unmetNeeds'" oninput="debouncedUpdateState('unmetNeedsNarrative', this.value)" placeholder="e.g., 'Most patients remain confused about how to use complex new medical devices, leading to poor adherence.'">${data.unmetNeedsNarrative}</textarea>
                         </div>
 
                         <!-- Decision 2: Journey Mapping -->
@@ -415,13 +427,13 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Moment of Truth (MoT) - 2 Points</label>
-                                <input type="text" class="input-text mb-2" value="${data.motPoints[0]}" oninput="updateArrayState('motPoints', 0, this.value)" placeholder="MoT 1 (Critical Decision Point)">
-                                <input type="text" class="input-text" value="${data.motPoints[1]}" oninput="updateArrayState('motPoints', 1, this.value)" placeholder="MoT 2 (Key Experience Point)">
+                                <input type="text" id="motPoint0" class="input-text mb-2" value="${data.motPoints[0]}" onfocus="lastFocusedInputId='motPoint0'" oninput="debouncedUpdateArrayState('motPoints', 0, this.value)" placeholder="MoT 1 (Critical Decision Point)">
+                                <input type="text" id="motPoint1" class="input-text" value="${data.motPoints[1]}" onfocus="lastFocusedInputId='motPoint1'" oninput="debouncedUpdateArrayState('motPoints', 1, this.value)" placeholder="MoT 2 (Key Experience Point)">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Intervention Points - 2 Points</label>
-                                <input type="text" class="input-text mb-2" value="${data.interventionPoints[0]}" oninput="updateArrayState('interventionPoints', 0, this.value)" placeholder="Intervention 1 (Where Product/Service is introduced)">
-                                <input type="text" class="input-text" value="${data.interventionPoints[1]}" oninput="updateArrayState('interventionPoints', 1, this.value)" placeholder="Intervention 2 (e.g., Post-sales support)">
+                                <input type="text" id="interventionPoint0" class="input-text mb-2" value="${data.interventionPoints[0]}" onfocus="lastFocusedInputId='interventionPoint0'" oninput="debouncedUpdateArrayState('interventionPoints', 0, this.value)" placeholder="Intervention 1 (Where Product/Service is introduced)">
+                                <input type="text" id="interventionPoint1" class="input-text" value="${data.interventionPoints[1]}" onfocus="lastFocusedInputId='interventionPoint1'" oninput="debouncedUpdateArrayState('interventionPoints', 1, this.value)" placeholder="Intervention 2 (e.g., Post-sales support)">
                             </div>
                         </div>
                     </div>
@@ -504,13 +516,13 @@
                                 ${coreValueOptions}
                             </div>
                             <label for="valueStoryHeadline" class="block text-sm font-medium text-gray-700 mt-4 mb-1">Define Value Story Headline (1 Line)</label>
-                            <input type="text" id="valueStoryHeadline" class="input-text" value="${data.valueStoryHeadline}" oninput="updateState('valueStoryHeadline', this.value)" placeholder="e.g., 'Transforming complex monitoring into simple, daily care.'">
+                            <input type="text" id="valueStoryHeadline" class="input-text" value="${data.valueStoryHeadline}" onfocus="lastFocusedInputId='valueStoryHeadline'" oninput="debouncedUpdateState('valueStoryHeadline', this.value)" placeholder="e.g., 'Transforming complex monitoring into simple, daily care.'">
                         </div>
 
                         <!-- Decision 3: Positioning -->
                         <div>
                             <label for="positioningStatement" class="block text-sm font-medium text-gray-700 mb-1">Decision 3: Positioning Statement (Who / What / Why)</label>
-                            <textarea id="positioningStatement" class="input-textarea" rows="3" oninput="updateState('positioningStatement', this.value)" placeholder="e.g., 'For physicians demanding precision, our AI Diagnosis Tool is the fastest and most accurate diagnostic instrument, because we utilize the latest Machine Learning technology.'">${data.positioningStatement}</textarea>
+                            <textarea id="positioningStatement" class="input-textarea" rows="3" onfocus="lastFocusedInputId='positioningStatement'" oninput="debouncedUpdateState('positioningStatement', this.value)" placeholder="e.g., 'For physicians demanding precision, our AI Diagnosis Tool is the fastest and most accurate diagnostic instrument, because we utilize the latest Machine Learning technology.'">${data.positioningStatement}</textarea>
                         </div>
                     </div>
                 </div>
@@ -549,7 +561,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="productElement" class="block text-sm font-medium text-gray-700 mb-1">Most Important Product Element</label>
-                                <input type="text" id="productElement" class="input-text" value="${data.productElement}" oninput="updateState('productElement', this.value)" placeholder="e.g., Core efficacy, Digital interface, Support service, Formulation">
+                                <input type="text" id="productElement" class="input-text" value="${data.productElement}" onfocus="lastFocusedInputId='productElement'" oninput="debouncedUpdateState('productElement', this.value)" placeholder="e.g., Core efficacy, Digital interface, Support service, Formulation">
                             </div>
                             <div>
                                 <label for="pricingStrategy" class="block text-sm font-medium text-gray-700 mb-1">Pricing/Access Strategy</label>
@@ -568,7 +580,7 @@
                                 ${CHANNEL_OPTIONS.map(c => `<option value="${c.value}" ${data.primaryDistribution === c.value ? 'selected' : ''}>${c.label}</option>`).join('')}
                             </select>
                             <label for="accessHurdle" class="block text-sm font-medium text-gray-700 mb-1">Biggest Access Hurdle in this Channel</label>
-                            <input type="text" id="accessHurdle" class="input-text" value="${data.accessHurdle}" oninput="updateState('accessHurdle', this.value)" placeholder="e.g., Regulatory, P&T Committee, Supply Chain Complexity">
+                            <input type="text" id="accessHurdle" class="input-text" value="${data.accessHurdle}" onfocus="lastFocusedInputId='accessHurdle'" oninput="debouncedUpdateState('accessHurdle', this.value)" placeholder="e.g., Regulatory, P&T Committee, Supply Chain Complexity">
                             
                         </div>
 
@@ -576,11 +588,11 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="hcpComm" class="block text-sm font-medium text-gray-700 mb-1">Primary Communication Pathway for HCPs</label>
-                                <input type="text" id="hcpComm" class="input-text" value="${data.hcpComm}" oninput="updateState('hcpComm', this.value)" placeholder="e.g., MSL engagement, KOL advocacy, Digital P2P">
+                                <input type="text" id="hcpComm" class="input-text" value="${data.hcpComm}" onfocus="lastFocusedInputId='hcpComm'" oninput="debouncedUpdateState('hcpComm', this.value)" placeholder="e.g., MSL engagement, KOL advocacy, Digital P2P">
                             </div>
                             <div>
                                 <label for="endUserComm" class="block text-sm font-medium text-gray-700 mb-1">Primary Communication Pathway for End-Users</label>
-                                <input type="text" id="endUserComm" class="input-text" value="${data.endUserComm}" oninput="updateState('endUserComm', this.value)" placeholder="e.g., Social Media Campaign, Pharmacy Program, App Notification">
+                                <input type="text" id="endUserComm" class="input-text" value="${data.endUserComm}" onfocus="lastFocusedInputId='endUserComm'" oninput="debouncedUpdateState('endUserComm', this.value)" placeholder="e.g., Social Media Campaign, Pharmacy Program, App Notification">
                             </div>
                         </div>
                     </div>
@@ -615,7 +627,7 @@
                     <!-- Reflection -->
                     <div>
                         <label for="finalReflection" class="block text-sm font-medium text-gray-700 mb-1">Reflection: Final Debate Argument (2-3 lines: Why is this strategy superior to competitors?)</label>
-                        <textarea id="finalReflection" class="input-textarea" rows="4" oninput="updateState('finalReflection', this.value)" placeholder="Enter supporting arguments">${data.finalReflection}</textarea>
+                        <textarea id="finalReflection" class="input-textarea" rows="4" onfocus="lastFocusedInputId='finalReflection'" oninput="debouncedUpdateState('finalReflection', this.value)" placeholder="Enter supporting arguments">${data.finalReflection}</textarea>
                     </div>
                 </div>
                 
@@ -775,18 +787,58 @@
             }
         }
         
-        /** Updates a simple state key/value */
+        /** The debounced function to call renderStep and checkValidity */
+        const debouncedRenderStep = debounce(function() {
+            // Store the current cursor position/selection before re-rendering
+            const currentFocus = document.activeElement;
+            const selectionStart = currentFocus ? currentFocus.selectionStart : null;
+            const selectionEnd = currentFocus ? currentFocus.selectionEnd : null;
+
+            // Re-render the current step
+            renderStep(strategyState.currentStep);
+            
+            // After re-render, attempt to restore focus and cursor position
+            if (lastFocusedInputId) {
+                const newFocusedElement = document.getElementById(lastFocusedInputId);
+                if (newFocusedElement) {
+                    newFocusedElement.focus();
+                    
+                    // Restore cursor position if applicable (for text inputs/textareas)
+                    if (selectionStart !== null && (newFocusedElement.type === 'text' || newFocusedElement.tagName === 'TEXTAREA')) {
+                        newFocusedElement.setSelectionRange(selectionStart, selectionEnd);
+                    }
+                }
+            }
+        }, 300); // 300ms delay after last input
+
+        /** Updates a simple state key/value and triggers debounced re-render */
         function updateState(key, value) {
             strategyState.data[key] = value;
-            // Re-render the current step immediately after state update
-            renderStep(strategyState.currentStep);
+            // Immediate update for radio buttons and dropdowns (non-text input)
+            if (key !== 'unmetNeedsNarrative' && key !== 'valueStoryHeadline' && key !== 'positioningStatement' && key !== 'productElement' && key !== 'accessHurdle' && key !== 'hcpComm' && key !== 'endUserComm' && key !== 'finalReflection' && key !== 'companyName' && key !== 'productName' && key !== 'therapyArea') {
+                 renderStep(strategyState.currentStep);
+            }
+        }
+
+        /** Wrapper for debounced update state for text inputs/textareas */
+        function debouncedUpdateState(key, value) {
+            strategyState.data[key] = value;
+            debouncedRenderStep();
+        }
+
+        /** Wrapper for debounced update array state for text inputs/textareas */
+        function debouncedUpdateArrayState(key, index, value) {
+            strategyState.data[key][index] = value;
+            debouncedRenderStep();
         }
 
         /** Updates an array state at a specific index */
         function updateArrayState(key, index, value) {
             strategyState.data[key][index] = value;
-            // Re-render the current step immediately after state update
-            renderStep(strategyState.currentStep);
+            // Immediate update for dropdowns (non-text input)
+            if (key !== 'motPoints' && key !== 'interventionPoints') {
+                renderStep(strategyState.currentStep);
+            }
         }
         
         /** Handles checkbox changes for array state */
@@ -808,7 +860,7 @@
             } else {
                 strategyState.data[key] = array.filter(v => v !== value);
             }
-            // Re-render the current step immediately after state update
+            // Re-render the current step immediately after state update (for checkboxes/radio buttons)
             renderStep(strategyState.currentStep);
         }
 
@@ -897,8 +949,6 @@
                 Array.from(appContent.querySelectorAll('input, select, textarea, button')).forEach(el => el.disabled = true);
             } else {
                 appContent.classList.remove('decision-lock');
-                // Ensure copy button is not disabled when viewing locked steps 
-                // (it is enabled by default in renderStepX but this ensures the main next button is handled correctly)
             }
             
             // Re-enable copy buttons for locked (completed) steps, as the main content lock disables all.
@@ -910,6 +960,9 @@
 
         /** Handles navigation to the next step (locks the current step) */
         function nextStep() {
+            // Clear last focused ID when navigating away from the current step
+            lastFocusedInputId = null; 
+            
             if (strategyState.currentStep < strategyState.lockedSteps) {
                 // If the user is viewing a locked step, just advance without locking
                 strategyState.currentStep++;
@@ -924,6 +977,9 @@
 
         /** Handles navigation to the previous step (only for viewing, not editing) */
         function prevStep() {
+            // Clear last focused ID when navigating away from the current step
+            lastFocusedInputId = null;
+
             if (strategyState.currentStep > 0) {
                 strategyState.currentStep--;
             }
@@ -957,6 +1013,7 @@
 
         /** Resets the entire workshop state */
         function resetWorkshop() {
+            lastFocusedInputId = null;
             strategyState = {
                 currentStep: 0,
                 lockedSteps: 0,
